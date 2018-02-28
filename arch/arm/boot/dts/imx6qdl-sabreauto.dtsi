@@ -20,7 +20,7 @@
 		mxcfb2 = &mxcfb3;
 		mxcfb3 = &mxcfb4;
 	};
-	
+
 	memory:	memory {
 		reg = <0x10000000 0x80000000>;
 	};
@@ -738,15 +738,7 @@
 		pinctrl_i2c3: i2c3grp {
 			fsl,pins = <
 				MX6QDL_PAD_GPIO_3__I2C3_SCL  0x4001b8b1
-				MX6QDL_PAD_EIM_D18__I2C3_SDA 0x4001b8b1
-			>;
-		};
-
-		pinctrl_mlb: mlb {
-			fsl,pins = <
-				MX6QDL_PAD_ENET_TXD1__MLB_CLK 0x80000000
-				MX6QDL_PAD_GPIO_6__MLB_SIG    0x80000000
-				MX6QDL_PAD_GPIO_2__MLB_DATA   0x80000000
+				MX6QDL_PAD_GPIO_6__I2C3_SDA  0x4001b8b1
 			>;
 		};
 
@@ -956,12 +948,6 @@
 			};
 		};
 	};
-};
-
-&mlb {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_mlb>;
-	status = "okay";
 };
 
 &pwm3 {
