@@ -25,7 +25,7 @@
 		reg = <0x10000000 0x80000000>;
 	};
 
-	wlan_en_reg: fixedregulator@2 {
+	wlan_en_reg: fixedregulator@2 { /*WIFI*/
 		compatible = "regulator-fixed";
 		regulator-name = "wlan-en-regulator";
 		regulator-min-microvolt = <1800000>;
@@ -37,6 +37,18 @@
 		/* WLAN card specific delay */
 		startup-delay-us = <70000>;
 		enable-active-high;
+	};
+
+	btwilink { /*BT*/
+		compatible = "btwilink";
+	};
+
+	kim {
+		compatible = "kim";
+		nshutdown_gpio = <135>;	/*  GPIO5_07 */ /* so its userspace number is (5 - 1) * 32 + 7 = 135 */
+		dev_name = "/dev/ttymxc0";
+		flow_cntrl = <1>;
+		baud_rate = <3000000>;
 	};
 
 	leds {
@@ -756,6 +768,21 @@
 			>;
 		};
 
+		pinctrl_uart1_1: uart1grp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_SD3_DAT6__UART1_RX_DATA	0x1b0b1 // used for HOST_HCI_RX
+				MX6QDL_PAD_SD3_DAT7__UART1_TX_DATA	0x1b0b1 // used for HOST_HCI_TX
+				MX6QDL_PAD_EIM_D19__UART1_CTS_B		0x1b0b1
+				MX6QDL_PAD_EIM_D20__UART1_RTS_B		0x1b0b1
+			>;
+		};
+		pinctrl_uart2_1: uart2grp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_SD4_DAT4__UART2_RX_DATA	0x1b0b1
+				MX6QDL_PAD_SD4_DAT7__UART2_TX_DATA	0x1b0b1
+			>;
+		};
+
 		pinctrl_uart3_1: uart3grp-1 {
 			fsl,pins = <
 				MX6QDL_PAD_SD4_CLK__UART3_RX_DATA	0x1b0b1
@@ -930,6 +957,22 @@
 	status = "okay";
 };
 
+/* Bluetooth Uart */
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart1_1>;
+	fsl,uart-has-rtscts;
+	status = "okay";
+};
+
+/* ttymxc2 UART - GNSS */
+&uart2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart2_1>;
+	status = "okay";
+};
+
+/* OBD */
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3_1>;
@@ -964,7 +1007,7 @@
 	status = "okay";
 };
 
-&usdhc1 {
+&usdhc1 { /*WIFI*/
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc1>;
 	bus-width = <4>;
