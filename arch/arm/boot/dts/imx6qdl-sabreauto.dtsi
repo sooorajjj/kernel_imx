@@ -25,6 +25,20 @@
 		reg = <0x10000000 0x80000000>;
 	};
 
+	wlan_en_reg: fixedregulator@2 {
+		compatible = "regulator-fixed";
+		regulator-name = "wlan-en-regulator";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+
+		/* WLAN_EN GPIO for this board – Bank5, pin8 */
+		gpio = <&gpio5 8 GPIO_ACTIVE_HIGH>;
+
+		/* WLAN card specific delay */
+		startup-delay-us = <70000>;
+		enable-active-high;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
@@ -775,12 +789,14 @@
 
 		pinctrl_usdhc1: usdhc1grp {
 			fsl,pins = <
-				MX6QDL_PAD_SD1_CMD__SD1_CMD             0x17071
-				MX6QDL_PAD_SD1_CLK__SD1_CLK             0x10071
-				MX6QDL_PAD_SD1_DAT0__SD1_DATA0          0x17071
-				MX6QDL_PAD_SD1_DAT1__SD1_DATA1          0x17071
-				MX6QDL_PAD_SD1_DAT2__SD1_DATA2          0x17071
-				MX6QDL_PAD_SD1_DAT3__SD1_DATA3          0x17071
+				MX6QDL_PAD_SD1_CMD__SD1_CMD		0x17069
+				MX6QDL_PAD_SD1_CLK__SD1_CLK		0x10069
+				MX6QDL_PAD_SD1_DAT0__SD1_DATA0		0x17069
+				MX6QDL_PAD_SD1_DAT1__SD1_DATA1		0x17069
+				MX6QDL_PAD_SD1_DAT2__SD1_DATA2		0x17069
+				MX6QDL_PAD_SD1_DAT3__SD1_DATA3		0x17069
+				MX6QDL_PAD_DISP0_DAT14__GPIO5_IO08  0x13059 // reserve two pins wl8 gpio, this is pulled low at reset for WL_EN
+				MX6QDL_PAD_DISP0_DAT15__GPIO5_IO09  0x13059 // this is for WL_IRQ which driver will configure as an input with a pull down
 			>;
 		};
 
@@ -946,6 +962,30 @@
 	hnp-disable;
 	adp-disable;
 	status = "okay";
+};
+
+&usdhc1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc1>;
+	bus-width = <4>;
+	no-1-8-v;
+	keep-power-in-suspend;
+	enable-sdio-wakeup;
+	vmmc-supply = <&wlan_en_reg>;
+	non-removable;    /* non-removable is not a variable, the fact it is */
+	                  /* listed is all that is used by driver  */
+	cap-power-off-card;
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	wlcore: wlcore@0 {
+		compatible = "ti,wl1831";
+		reg = <2>;
+		interrupt-parent = <&gpio5>;
+		interrupts = <9 1>;
+		ref-clock-frequency = <38400000>;
+		tcxo-clock-frequency = <26000000>;
+	};
 };
 
 &usdhc2 {
