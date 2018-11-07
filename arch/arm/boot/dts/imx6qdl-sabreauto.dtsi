@@ -98,7 +98,7 @@
 			regulator-name = "usb_h1_vbus";
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
-			gpio = <&max7310_b 7 GPIO_ACTIVE_HIGH>;
+			gpio = <&max7310_c 7 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 		};
 
@@ -179,14 +179,6 @@
 			gpio = <&max7310_b 5 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
 			vin-supply = <&reg_can_en>;
-		};
-	};
-
-	hannstar_cabc {
-		compatible = "hannstar,cabc";
-
-		lvds_share {
-			gpios = <&max7310_a 0 GPIO_ACTIVE_HIGH>;
 		};
 	};
 
@@ -346,21 +338,6 @@
 	status = "okay";
 };
 
-&can1 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_flexcan1>;
-	pinctrl-assert-gpios = <&max7310_b 3 GPIO_ACTIVE_HIGH>; /* TX */
-	xceiver-supply = <&reg_can_stby>;
-	status = "disabled"; /* pin conflict with fec */
-};
-
-&can2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_flexcan2>;
-	xceiver-supply = <&reg_can_stby>;
-	status = "okay";
-};
-
 &gpmi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpmi_nand>;
@@ -388,6 +365,30 @@
 	fsl,phy_reg_vlev = <0x0294>;
 	fsl,phy_reg_cksymtx = <0x800d>;
 	status = "okay";
+};
+
+&i2c1 {
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	status = "okay";
+
+	/* LSM330DLCTR - ACCELEROMETER/GYROSCOPE */
+	lsm330dlc-accel@19 {
+		compatible = "st,lsm330dlc-accel";
+		reg = <0x19>;
+		interrupt-parent = <&gpio6>; /* EIM_BCLK__GPIO6_IO31 -int_accel */
+		interrupts = <31 1>;
+	};
+
+	lsm330dlc-gyro@6b {
+		compatible = "st,lsm330dlc-gyro";
+		reg = <0x6b>;
+		pinctrl-assert-gpios = <&max7310_c 6 GPIO_ACTIVE_HIGH>, <&max7310_c 4 GPIO_ACTIVE_LOW>, <&tca6408_u20 0 GPIO_ACTIVE_LOW>, <&tca6408_u20 3 GPIO_ACTIVE_LOW>, <&max7310_a 5 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&gpio3>; /* EIM_DA13__GPIO3_IO13 -int_gryo */
+		interrupts = <13 1>;
+	};
+
 };
 
 &i2c2 {
@@ -561,7 +562,7 @@
 		AVDD-supply = <&reg_3p3v>;  /* 1.8v */
 		DVDD-supply = <&reg_3p3v>;  /* 1.8v */
 		PVDD-supply = <&reg_3p3v>;  /* 1.8v */
-		pwn-gpios = <&max7310_b 2 0>;
+		pwn-gpios = <&max7310_c 3 0>;
 		csi_id = <0>;
 		mclk = <24000000>;
 		mclk_source = <0>;
@@ -574,6 +575,13 @@
 		rext = <499>;
 		interrupt-parent = <&gpio5>;
 		interrupts = <17 2>;
+	};
+
+	tca6408_u20: gpio@20 {
+		compatible = "ti,tca6408";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
 	};
 
 	max7310_a: gpio@30 {
@@ -681,20 +689,6 @@
 			>;
 		};
 
-		pinctrl_flexcan1: flexcan1grp {
-			fsl,pins = <
-				MX6QDL_PAD_KEY_ROW2__FLEXCAN1_RX        0x17059
-				MX6QDL_PAD_KEY_COL2__FLEXCAN1_TX	0x17059
-			>;
-		};
-
-		pinctrl_flexcan2: flexcan2grp {
-			fsl,pins = <
-				MX6QDL_PAD_KEY_COL4__FLEXCAN2_TX	0x17059
-				MX6QDL_PAD_KEY_ROW4__FLEXCAN2_RX	0x17059
-			>;
-		};
-
 		pinctrl_gpio_leds: gpioledsgrp {
 			fsl,pins = <
 				MX6QDL_PAD_DISP0_DAT21__GPIO5_IO15	0x80000000
@@ -720,6 +714,13 @@
 				MX6QDL_PAD_NANDF_D6__NAND_DATA06	0xb0b1
 				MX6QDL_PAD_NANDF_D7__NAND_DATA07	0xb0b1
 				MX6QDL_PAD_SD4_DAT0__NAND_DQS		0x00b1
+			>;
+		};
+
+		pinctrl_i2c1: i2c1grp {
+			fsl,pins = <
+				MX6QDL_PAD_EIM_D21__I2C1_SCL	0x4001b8b1
+				MX6QDL_PAD_EIM_D28__I2C1_SDA	0x4001b8b1
 			>;
 		};
 
@@ -805,6 +806,16 @@
 			fsl,pins = <
 				MX6QDL_PAD_KEY_COL0__UART4_TX_DATA	0x1b0b1
 				MX6QDL_PAD_KEY_ROW0__UART4_RX_DATA	0x1b0b1
+			>;
+		};
+
+
+		pinctrl_uart5: uart5grp {
+			fsl,pins = <
+				MX6QDL_PAD_KEY_COL1__UART5_TX_DATA	0x1b0b1
+				MX6QDL_PAD_KEY_ROW1__UART5_RX_DATA	0x1b0b1
+				MX6QDL_PAD_KEY_COL4__UART5_RTS_B	0x1b0b1
+				MX6QDL_PAD_KEY_ROW4__UART5_CTS_B	0x1b0b1
 			>;
 		};
 
@@ -965,7 +976,7 @@
 	status = "okay";
 };
 
-/* ttymxc2 UART - GNSS */
+/* ttymxc1 UART - GNSS */
 &uart2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart2_1>;
@@ -976,8 +987,6 @@
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3_1>;
-	pinctrl-assert-gpios = <&max7310_b 4 GPIO_ACTIVE_HIGH>, /* CTS */
-			       <&max7310_c 3 GPIO_ACTIVE_HIGH>; /* RXD and TXD */
 	fsl,uart-has-rtscts;
 	status = "okay";
 	/* for DTE mode, add below change */
@@ -989,6 +998,14 @@
 &uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
+	status = "okay";
+};
+
+/* RS232 Uart */
+&uart5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart5>;
+	fsl,uart-has-rtscts;
 	status = "okay";
 };
 
